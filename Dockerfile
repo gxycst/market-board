@@ -20,6 +20,7 @@ COPY --chown=node:node --from=build /app/package.json ./package.json
 COPY --chown=node:node --from=build /app/node_modules ./node_modules
 COPY --chown=node:node --from=build /app/server ./server
 COPY --chown=node:node --from=build /app/client/dist ./client/dist
+RUN chmod -R u=rwX,go=rX /app/server /app/client /app/node_modules /app/package.json
 
 USER node
 EXPOSE 3001
