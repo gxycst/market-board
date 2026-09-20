@@ -36,6 +36,13 @@ async function fetchGlobalFutureSeries(symbol) {
   return (payload.minLine_1d || []).map(row => Number(row[1])).filter(Number.isFinite).slice(-90)
 }
 
+async function fetchGlobalFutureDailySeries(symbol) {
+  const text = await fetchText(`https://stock2.finance.sina.com.cn/futures/api/jsonp.php/var%20_data=/GlobalFuturesService.getGlobalFuturesDailyKLine?symbol=${symbol}`)
+  const values = jsonFromJsonp(text).map(row => Number(row.close)).filter(Number.isFinite).slice(-90)
+  if (values.length < 20 || new Set(values).size < 5) throw new Error('Sina daily history unavailable')
+  return values
+}
+
 async function fetchTencentMinuteSeries(code) {
   const response = await fetch(`https://web.ifzq.gtimg.cn/appstock/app/minute/query?code=${code}`, {
     signal: AbortSignal.timeout(6000),
@@ -113,7 +120,13 @@ async function fetchHuobiSeries() {
 }
 
 async function fetchBitcoinSeries() {
-  const providers = [fetchOkxSeries, fetchBinanceSeries, fetchHuobiSeries, fetchCoinGeckoSeries]
+  const providers = [
+    () => fetchGlobalFutureDailySeries('BTC'),
+    fetchOkxSeries,
+    fetchBinanceSeries,
+    fetchHuobiSeries,
+    fetchCoinGeckoSeries
+  ]
   for (const provider of providers) {
     try { return await provider() } catch { /* 尝试下一个真实行情源 */ }
   }
