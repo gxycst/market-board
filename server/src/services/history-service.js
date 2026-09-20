@@ -47,6 +47,40 @@ async function fetchTencentMinuteSeries(code) {
   return rows.map(row => Number(String(row).split(' ')[1])).filter(Number.isFinite).slice(-90)
 }
 
+function yyyymmdd(date) {
+  return date.toISOString().slice(0, 10).replaceAll('-', '')
+}
+
+async function fetchNaverDailySeries(symbol) {
+  const end = new Date()
+  const start = new Date(end)
+  start.setUTCDate(start.getUTCDate() - 180)
+  const url = `https://api.finance.naver.com/siseJson.naver?symbol=${symbol}&requestType=1&startTime=${yyyymmdd(start)}&endTime=${yyyymmdd(end)}&timeframe=day`
+  const text = await fetchText(url)
+  const values = (text.match(/\["\d{8}"[^\]]*\]/g) || [])
+    .map(row => {
+      try { return Number(JSON.parse(row)[4]) } catch { return NaN }
+    })
+    .filter(Number.isFinite)
+    .slice(-90)
+  if (values.length < 5) throw new Error('Naver history unavailable')
+  return values
+}
+
+async function fetchCoinGeckoSeries() {
+  const response = await fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=1&interval=hourly', {
+    signal: AbortSignal.timeout(6000),
+    headers: { Accept: 'application/json', 'User-Agent': 'Mozilla/5.0 MarketBoard/0.1' }
+  })
+  if (!response.ok) throw new Error(`HTTP ${response.status}`)
+  const values = ((await response.json()).prices || [])
+    .map(row => Number(row[1]))
+    .filter(Number.isFinite)
+    .slice(-90)
+  if (values.length < 5) throw new Error('CoinGecko history unavailable')
+  return values
+}
+
 async function fetchYahooSeries(ticker) {
   const response = await fetch(`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(ticker)}?range=5d&interval=5m`, {
     signal: AbortSignal.timeout(6000), headers: { 'User-Agent': 'Mozilla/5.0 MarketBoard/0.1' }
@@ -63,8 +97,13 @@ async function fetchSeries(instrument) {
   let values = []
   if (/^(sh|sz|bj)\d{6}$/.test(symbol)) values = await fetchCnSeries(symbol)
   else if (symbol.startsWith('hf_')) values = await fetchGlobalFutureSeries(symbol.slice(3))
-  else if (symbol === 'fx_sbtcusd') values = await fetchGlobalFutureSeries('BTC')
-  else if (symbol.startsWith('b_KS')) values = await fetchTencentMinuteSeries(`kr${symbol.slice(4)}`)
+  else if (symbol === 'fx_sbtcusd') {
+    try { values = await fetchCoinGeckoSeries() }
+    catch { values = await fetchGlobalFutureSeries('BTC') }
+  } else if (symbol.startsWith('b_KS')) {
+    try { values = await fetchNaverDailySeries(symbol.slice(4)) }
+    catch { values = await fetchTencentMinuteSeries(`kr${symbol.slice(4)}`) }
+  }
   else if (symbol.startsWith('hk')) values = await fetchTencentMinuteSeries(symbol)
   else if (yahooTickerById[instrument.id]) values = await fetchYahooSeries(yahooTickerById[instrument.id])
   cache.set(instrument.id, { time: Date.now(), values })
