@@ -77,8 +77,47 @@ async function fetchCoinGeckoSeries() {
     .map(row => Number(row[1]))
     .filter(Number.isFinite)
     .slice(-90)
-  if (values.length < 5) throw new Error('CoinGecko history unavailable')
-  return values
+  return validateCryptoSeries(values, 'CoinGecko')
+}
+
+function validateCryptoSeries(values, source) {
+  const clean = values.map(Number).filter(Number.isFinite).slice(-90)
+  if (clean.length < 20 || new Set(clean).size < 5) throw new Error(`${source} history unavailable`)
+  return clean
+}
+
+async function fetchOkxSeries() {
+  const response = await fetch('https://www.okx.com/api/v5/market/candles?instId=BTC-USDT&bar=5m&limit=90', {
+    signal: AbortSignal.timeout(6000), headers: { Accept: 'application/json', 'User-Agent': 'Mozilla/5.0 MarketBoard/0.1' }
+  })
+  if (!response.ok) throw new Error(`HTTP ${response.status}`)
+  const rows = (await response.json()).data || []
+  return validateCryptoSeries(rows.map(row => row[4]).reverse(), 'OKX')
+}
+
+async function fetchBinanceSeries() {
+  const response = await fetch('https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=5m&limit=90', {
+    signal: AbortSignal.timeout(6000), headers: { Accept: 'application/json', 'User-Agent': 'Mozilla/5.0 MarketBoard/0.1' }
+  })
+  if (!response.ok) throw new Error(`HTTP ${response.status}`)
+  return validateCryptoSeries((await response.json()).map(row => row[4]), 'Binance')
+}
+
+async function fetchHuobiSeries() {
+  const response = await fetch('https://api.huobi.pro/market/history/kline?period=5min&size=90&symbol=btcusdt', {
+    signal: AbortSignal.timeout(6000), headers: { Accept: 'application/json', 'User-Agent': 'Mozilla/5.0 MarketBoard/0.1' }
+  })
+  if (!response.ok) throw new Error(`HTTP ${response.status}`)
+  const rows = (await response.json()).data || []
+  return validateCryptoSeries(rows.map(row => row.close).reverse(), 'Huobi')
+}
+
+async function fetchBitcoinSeries() {
+  const providers = [fetchOkxSeries, fetchBinanceSeries, fetchHuobiSeries, fetchCoinGeckoSeries]
+  for (const provider of providers) {
+    try { return await provider() } catch { /* 尝试下一个真实行情源 */ }
+  }
+  throw new Error('Bitcoin history unavailable')
 }
 
 async function fetchYahooSeries(ticker) {
@@ -98,8 +137,7 @@ async function fetchSeries(instrument) {
   if (/^(sh|sz|bj)\d{6}$/.test(symbol)) values = await fetchCnSeries(symbol)
   else if (symbol.startsWith('hf_')) values = await fetchGlobalFutureSeries(symbol.slice(3))
   else if (symbol === 'fx_sbtcusd') {
-    try { values = await fetchCoinGeckoSeries() }
-    catch { values = await fetchGlobalFutureSeries('BTC') }
+    values = await fetchBitcoinSeries()
   } else if (symbol.startsWith('b_KS')) {
     try { values = await fetchNaverDailySeries(symbol.slice(4)) }
     catch { values = await fetchTencentMinuteSeries(`kr${symbol.slice(4)}`) }
