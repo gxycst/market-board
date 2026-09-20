@@ -1,0 +1,26 @@
+services:
+  market-board:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: local/market-board:latest
+    container_name: market-board
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      TZ: Asia/Shanghai
+      NODE_ENV: production
+      PORT: "3001"
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    logging:
+      driver: local
+      options:
+        max-size: "5m"
+        max-file: "2"
