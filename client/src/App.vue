@@ -18,6 +18,7 @@ let timer
 let historyTimer
 let controller
 let longPress = null
+const historyReady = new Set()
 
 function orderedRows(groupTitle, list) {
   const order = savedOrders.value[groupTitle] || []
@@ -99,9 +100,9 @@ async function fetchQuotes() {
     for (const item of payload.data) {
       if (!Number.isFinite(item.price)) continue
       const values = histories.value[item.id] || []
-      histories.value[item.id] = values.length > 1
+      histories.value[item.id] = historyReady.has(item.id) && values.length > 1
         ? [...values.slice(0, -1), item.price]
-        : [item.price, item.price]
+        : [...values.slice(-89), item.price]
     }
     lastUpdated.value = new Date()
     latency.value = Math.round(performance.now() - started)
@@ -120,7 +121,10 @@ async function fetchIntraday() {
     if (!response.ok) return
     const payload = await response.json()
     for (const [id, values] of Object.entries(payload.data || {})) {
-      if (values.length) histories.value[id] = values
+      if (values.length >= 5) {
+        histories.value[id] = values
+        historyReady.add(id)
+      }
     }
   } catch { /* 实时价格仍可继续使用 */ }
 }
