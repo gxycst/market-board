@@ -22,7 +22,9 @@ export class TencentPremiumProvider {
       const match = line.match(/^v_([^=]+)="(.*)"$/)
       if (!match) continue
       const fields = match[2].split('~')
-      const premiumRate = finite(fields[77])
+      const rawPremiumRate = finite(fields[77])
+      // 盘前 IOPV 尚未发布时，腾讯可能返回 -100 作为占位值；这不是实际折价率。
+      const premiumRate = rawPremiumRate != null && rawPremiumRate > -99.9 ? rawPremiumRate : null
       if (premiumRate == null) continue
       bySymbol.set(match[1], {
         premiumRate,
