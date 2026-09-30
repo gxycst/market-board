@@ -71,6 +71,21 @@ body { margin: 0; min-width: 960px; }
 .asia-group .sparkline { height: 32px; }
 .remove { position: absolute; top: 50%; right: 0; width: 22px; height: 22px; transform: translateY(-50%); color: #a2a8b1; background: transparent; border: 0; border-radius: 50%; font-size: 18px; line-height: 20px; cursor: pointer; }
 .remove:hover { color: #e84955; background: #fff0f1; }
+.shell { --name-size: 17px; --price-size: 21px; --percent-size: 18px; --row-height: 62px; font-family: "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC", sans-serif; }
+.shell .quote-row { min-height: var(--row-height); padding: 5px 6px; }
+.shell .identity strong { font-size: var(--name-size); font-weight: 600; letter-spacing: -.5px; white-space: normal; overflow-wrap: anywhere; line-height: 1.2; }
+.shell .identity span { font-size: 11px; margin-top: 2px; }
+.shell .price { font-size: var(--price-size); }
+.shell .change, .shell .premium, .shell .ytd, .shell .one-year { font-size: var(--percent-size); }
+.shell .price, .shell .change, .shell .premium, .shell .ytd, .shell .one-year { font-family: "Bahnschrift", "Arial Narrow", Arial, sans-serif; letter-spacing: -.6px; white-space: nowrap; }
+.shell .premium-grid { grid-template-columns: minmax(0, 1.65fr) minmax(0, .7fr) repeat(4, minmax(0, .72fr)) minmax(0, .85fr); column-gap: 3px; }
+.shell .premium-grid .identity strong { font-size: calc(var(--name-size) - 2px); }
+.shell .premium-grid .price { font-size: calc(var(--price-size) - 3px); }
+.shell .premium-grid .change, .shell .premium-grid .premium, .shell .premium-grid .ytd, .shell .premium-grid .one-year { font-size: calc(var(--percent-size) - 3px); }
+.shell .table-head { font-size: 11px; padding-left: 6px; padding-right: 6px; }
+.shell .headline-quote span { font-size: 12px; }
+.shell .headline-quote strong { font-size: var(--price-size); }
+.shell .headline-quote em { font-size: calc(var(--percent-size) - 2px); }
 @media (max-width: 1250px) {
   body { min-width: 1100px; }
   .row-grid { grid-template-columns: minmax(138px, 1.15fr) minmax(62px, .55fr) minmax(50px, .45fr) minmax(84px, .82fr); column-gap: 4px; }
