@@ -2,4 +2,5 @@ node_modules/
 client/dist/
 .env
 npm-debug.log*
+market-board-local*.log
 
