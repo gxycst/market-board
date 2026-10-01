@@ -14,6 +14,7 @@ const customSymbols = ref([])
 const savedOrders = ref({})
 const sortStates = ref({})
 const draggingId = ref('')
+const theme = ref('dark')
 let timer
 let historyTimer
 let controller
@@ -92,6 +93,17 @@ function formatPrice(value) {
 function formatPercent(value) {
   if (!Number.isFinite(value)) return '--'
   return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`
+}
+
+function applyTheme(value) {
+  theme.value = value
+  document.documentElement.style.colorScheme = value
+}
+
+function toggleTheme() {
+  const nextTheme = theme.value === 'dark' ? 'light' : 'dark'
+  applyTheme(nextTheme)
+  localStorage.setItem('market-board-theme', nextTheme)
 }
 
 async function fetchQuotes() {
@@ -217,6 +229,7 @@ function startLongPress(event, group, id) {
 }
 
 onMounted(async () => {
+  applyTheme(localStorage.getItem('market-board-theme') === 'light' ? 'light' : 'dark')
   try { customSymbols.value = JSON.parse(localStorage.getItem('market-board-cn-symbols') || '[]') } catch { customSymbols.value = [] }
   try { savedOrders.value = JSON.parse(localStorage.getItem('market-board-orders') || '{}') } catch { savedOrders.value = {} }
   await Promise.all([fetchQuotes(), fetchIntraday()])
@@ -227,7 +240,10 @@ onBeforeUnmount(() => { clearInterval(timer); clearInterval(historyTimer); contr
 </script>
 
 <template>
-  <main class="shell">
+  <main class="shell" :class="`theme-${theme}`">
+    <button class="theme-toggle" type="button" :aria-label="theme === 'dark' ? '切换到浅色模式' : '切换到深色模式'" :title="theme === 'dark' ? '切换到浅色模式' : '切换到深色模式'" @click="toggleTheme">
+      <span aria-hidden="true">{{ theme === 'dark' ? '☀' : '☾' }}</span>
+    </button>
     <div v-if="error" class="notice">{{ error }}</div>
     <div v-if="loading" class="loading">正在连接真实行情源…</div>
 
