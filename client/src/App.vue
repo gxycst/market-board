@@ -19,6 +19,13 @@ let historyTimer
 let controller
 let longPress = null
 const historyReady = new Set()
+const headlineNames = {
+  'nasdaq-future': 'Nasdaq 100 Futures',
+  'sp500-future': 'S&P 500 Futures',
+  'nikkei-225': 'Nikkei 225',
+  topix: 'TOPIX',
+  kospi: 'KOSPI'
+}
 
 function orderedRows(groupTitle, list) {
   const order = savedOrders.value[groupTitle] || []
@@ -231,7 +238,7 @@ onBeforeUnmount(() => { clearInterval(timer); clearInterval(historyTimer); contr
 
           <div class="headline-strip">
             <div v-for="item in group.headlineRows" :key="item.id" class="headline-quote">
-              <span>{{ item.name.replace('指数', '').replace('期货', '') }}</span>
+              <span>{{ headlineNames[item.id] || item.name.replace('指数', '').replace('期货', '') }}</span>
               <strong :class="item.changePercent >= 0 ? 'up' : 'down'">{{ formatPrice(item.price) }}</strong>
               <em :class="item.changePercent >= 0 ? 'up' : 'down'">{{ formatPercent(item.changePercent) }}</em>
             </div>
@@ -274,7 +281,7 @@ onBeforeUnmount(() => { clearInterval(timer); clearInterval(historyTimer); contr
 
             <div class="headline-strip">
               <div v-for="item in group.headlineRows" :key="item.id" class="headline-quote">
-                <span>{{ item.name.replace('指数', '').replace('期货', '') }}</span>
+                <span>{{ headlineNames[item.id] || item.name.replace('指数', '').replace('期货', '') }}</span>
                 <strong :class="item.changePercent >= 0 ? 'up' : 'down'">{{ formatPrice(item.price) }}</strong>
                 <em :class="item.changePercent >= 0 ? 'up' : 'down'">{{ formatPercent(item.changePercent) }}</em>
               </div>

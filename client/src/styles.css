@@ -1,7 +1,8 @@
 :root {
   font-family: Inter, "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
-  color: #171a21;
-  background: #eef1f5;
+  color: #dce7f5;
+  background: #080c12;
+  color-scheme: dark;
   font-synthesis: none;
 }
 * { box-sizing: border-box; }
@@ -86,6 +87,31 @@ body { margin: 0; min-width: 960px; }
 .shell .headline-quote span { font-size: 12px; }
 .shell .headline-quote strong { font-size: var(--price-size); }
 .shell .headline-quote em { font-size: calc(var(--percent-size) - 2px); }
+/* Dark terminal preview: restrained cyan accents keep quotes easy to scan. */
+.shell, .market-group, .table-card { background: #080c12; }
+.market-group + .market-group, .asia-section + .asia-section { border-color: #25364b; }
+.group-title { background: linear-gradient(110deg, #101b2b, #0b111c); border-bottom-color: #263b54; box-shadow: none; }
+.headline-quote { background: #111f30; border: 0; border-radius: 4px; }
+.headline-quote span { color: #9bb2cb; }
+.flag { border-color: #40536c; }
+.table-head { color: #84a7c8; background: #0e1723; border-bottom-color: #25364b; }
+.sort-head:hover { color: #5dd7ff; }
+.sort-head i { color: #5c83a9; }
+.quote-row { border-bottom-color: #172333; }
+.quote-row:nth-child(odd) { background: #0c121c; }
+.quote-row:hover { background: #122235; }
+.identity strong { color: #e4edf8; }
+.identity span { color: #6b819d; }
+.up { color: #ff6377; }
+.down { color: #35db9b; }
+.header-status, .status, .global-mark b { color: #90abc8; }
+.status small { color: #6583a3; }
+.pulse { background: #35db9b; box-shadow: 0 0 8px #35db9b66; }
+.sortable-row.dragging { background: #17304a; box-shadow: inset 3px 0 #5dd7ff; }
+.notice { background: #302513; color: #ffcf7a; border-color: #70572b; }
+.loading { color: #8ecfff; background: #102135; }
+.remove { color: #7d96b1; }
+.remove:hover { color: #ff6377; background: #35202b; }
 @media (max-width: 1250px) {
   body { min-width: 1100px; }
   .row-grid { grid-template-columns: minmax(138px, 1.15fr) minmax(62px, .55fr) minmax(50px, .45fr) minmax(84px, .82fr); column-gap: 4px; }
