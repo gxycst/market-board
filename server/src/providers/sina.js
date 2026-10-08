@@ -35,9 +35,13 @@ function parseSimpleIndex(instrument, fields) {
   return withCommonFields(instrument, { price, change, changePercent, provider: 'sina', status: price == null ? 'unavailable' : 'ok' })
 }
 
-function parseCnStock(instrument, fields) {
-  const price = numeric(fields[3])
+export function parseCnStock(instrument, fields) {
+  const reportedPrice = numeric(fields[3])
   const previousClose = numeric(fields[2])
+  // Sina reports the current price as 0 for suspended exchange-traded products.
+  // Keep their last valid close instead of turning that sentinel into a -100% move.
+  const suspended = reportedPrice === 0 && previousClose != null && previousClose > 0
+  const price = suspended ? previousClose : (reportedPrice != null && reportedPrice > 0 ? reportedPrice : null)
   const change = price != null && previousClose != null ? price - previousClose : null
   const resolvedName = instrument.custom ? (fields[0] || instrument.name) : instrument.name
   return withCommonFields({ ...instrument, name: resolvedName }, {
@@ -46,7 +50,7 @@ function parseCnStock(instrument, fields) {
     changePercent: change != null && previousClose ? change / previousClose * 100 : null,
     marketTime: fields[30] && fields[31] ? `${fields[30]}T${fields[31]}` : null,
     provider: 'sina',
-    status: price == null ? 'unavailable' : 'ok'
+    status: suspended ? 'suspended' : (price == null ? 'unavailable' : 'ok')
   })
 }
 
