@@ -37,6 +37,9 @@ body { margin: 0; min-width: 960px; }
 .status small { color: #9aa1ad; font-size: 9px; margin-top: 1px; }
 .header-status { flex: 0 0 118px; width: 118px; height: 34px; justify-content: flex-end; padding: 0; color: #737b87; background: transparent; border: 0; font-style: italic; }
 .header-status > div { width: 92px; }
+.last-modified { display: flex; margin-left: auto; align-items: baseline; gap: 6px; color: #90abc8; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.last-modified small { color: #6583a3; font-size: 9px; }
+.last-modified strong { font-size: 11px; font-weight: 600; }
 .pulse { width: 8px; height: 8px; border-radius: 50%; background: #1fb47a; box-shadow: 0 0 0 5px #1fb47a18; }
 .offline .pulse { background: #e84955; box-shadow: 0 0 0 5px #e8495518; }
 .notice, .loading { position: fixed; left: 50%; top: 12px; z-index: 10; transform: translateX(-50%); border-radius: 8px; padding: 8px 12px; font-size: 12px; box-shadow: 0 5px 18px #2636501c; }
@@ -138,6 +141,8 @@ body { margin: 0; min-width: 960px; }
 .theme-light .header-status, .theme-light .status { color: #737b87; }
 .theme-light .global-mark b { color: #505866; }
 .theme-light .status small { color: #9aa1ad; }
+.theme-light .last-modified { color: #737b87; }
+.theme-light .last-modified small { color: #9aa1ad; }
 .theme-light .pulse { background: #1fb47a; box-shadow: 0 0 0 5px #1fb47a18; }
 .theme-light .sortable-row.dragging { background: #f2f5f9; box-shadow: inset 3px 0 #677489; }
 .theme-light .notice { background: #fff8e8; color: #9b6a00; border-color: #f2dfad; }

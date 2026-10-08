@@ -15,6 +15,7 @@ const savedOrders = ref({})
 const sortStates = ref({})
 const draggingId = ref('')
 const theme = ref('dark')
+const lastModifiedDate = __BUILD_DATE__
 let timer
 let historyTimer
 let controller
@@ -304,6 +305,9 @@ onBeforeUnmount(() => { clearInterval(timer); clearInterval(historyTimer); contr
               <div v-if="group.title === '韩国'" class="status header-status" :class="{ offline: error && !rows.length }">
                 <span class="pulse" />
                 <div><strong>{{ clock }}</strong><small>{{ latency == null ? '连接中' : `${latency} ms · 1秒刷新` }}</small></div>
+              </div>
+              <div v-if="group.title === '全球'" class="last-modified">
+                <small>最后修改</small><strong>{{ lastModifiedDate }}</strong>
               </div>
             </div>
 
