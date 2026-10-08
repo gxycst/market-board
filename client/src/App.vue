@@ -14,6 +14,8 @@ const customSymbols = ref([])
 const savedOrders = ref({})
 const sortStates = ref({})
 const draggingId = ref('')
+const theme = ref('dark')
+const lastModifiedDate = __BUILD_DATE__
 let timer
 let historyTimer
 let controller
@@ -92,6 +94,17 @@ function formatPrice(value) {
 function formatPercent(value) {
   if (!Number.isFinite(value)) return '--'
   return `${value >= 0 ? '+' : ''}${value.toFixed(2)}%`
+}
+
+function applyTheme(value) {
+  theme.value = value
+  document.documentElement.style.colorScheme = value
+}
+
+function toggleTheme() {
+  const nextTheme = theme.value === 'dark' ? 'light' : 'dark'
+  applyTheme(nextTheme)
+  localStorage.setItem('market-board-theme', nextTheme)
 }
 
 async function fetchQuotes() {
@@ -217,6 +230,7 @@ function startLongPress(event, group, id) {
 }
 
 onMounted(async () => {
+  applyTheme(localStorage.getItem('market-board-theme') === 'light' ? 'light' : 'dark')
   try { customSymbols.value = JSON.parse(localStorage.getItem('market-board-cn-symbols') || '[]') } catch { customSymbols.value = [] }
   try { savedOrders.value = JSON.parse(localStorage.getItem('market-board-orders') || '{}') } catch { savedOrders.value = {} }
   await Promise.all([fetchQuotes(), fetchIntraday()])
@@ -227,7 +241,10 @@ onBeforeUnmount(() => { clearInterval(timer); clearInterval(historyTimer); contr
 </script>
 
 <template>
-  <main class="shell">
+  <main class="shell" :class="`theme-${theme}`">
+    <button class="theme-toggle" type="button" :aria-label="theme === 'dark' ? '切换到浅色模式' : '切换到深色模式'" :title="theme === 'dark' ? '切换到浅色模式' : '切换到深色模式'" @click="toggleTheme">
+      <span aria-hidden="true">{{ theme === 'dark' ? '☀' : '☾' }}</span>
+    </button>
     <div v-if="error" class="notice">{{ error }}</div>
     <div v-if="loading" class="loading">正在连接真实行情源…</div>
 
@@ -255,10 +272,10 @@ onBeforeUnmount(() => { clearInterval(timer); clearInterval(historyTimer); contr
             <button v-if="['美国', '日本'].includes(group.title)" class="sort-head" type="button" @click="toggleSort(group.title, 'oneYearChangePercent')">近一年 <i>{{ sortMark(group.title, 'oneYearChangePercent') }}</i></button>
             <span v-else>涨跌幅</span><span>分时</span>
           </div>
-          <article v-for="item in group.bodyRows" :key="item.id" class="quote-row row-grid sortable-row" :class="{ dragging: draggingId === item.id, 'premium-grid': ['美国', '日本'].includes(group.title) }" :data-quote-id="item.id" :data-group="group.title" @pointerdown="startLongPress($event, group.title, item.id)">
+          <article v-for="item in group.bodyRows" :key="item.id" class="quote-row row-grid sortable-row" :class="{ dragging: draggingId === item.id, suspended: item.status === 'suspended', 'premium-grid': ['美国', '日本'].includes(group.title) }" :data-quote-id="item.id" :data-group="group.title" @pointerdown="startLongPress($event, group.title, item.id)">
             <div class="identity">
               <strong>{{ item.name }}</strong>
-              <span>{{ item.displayCode }}</span>
+              <span>{{ item.displayCode }} <em v-if="item.status === 'suspended'" class="suspended-badge">停牌</em></span>
               <button v-if="item.custom" class="remove" type="button" aria-label="删除自选" @click="removeStock(item.id.replace('custom-', ''))">×</button>
             </div>
             <div class="price" :class="item.changePercent >= 0 ? 'up' : 'down'">{{ formatPrice(item.price) }}</div>
@@ -289,6 +306,9 @@ onBeforeUnmount(() => { clearInterval(timer); clearInterval(historyTimer); contr
                 <span class="pulse" />
                 <div><strong>{{ clock }}</strong><small>{{ latency == null ? '连接中' : `${latency} ms · 1秒刷新` }}</small></div>
               </div>
+              <div v-if="group.title === '全球'" class="last-modified">
+                <small>最后修改</small><strong>{{ lastModifiedDate }}</strong>
+              </div>
             </div>
 
           </header>
@@ -302,10 +322,10 @@ onBeforeUnmount(() => { clearInterval(timer); clearInterval(historyTimer); contr
               <button v-if="['美国', '日本'].includes(group.title)" class="sort-head" type="button" @click="toggleSort(group.title, 'oneYearChangePercent')">近一年 <i>{{ sortMark(group.title, 'oneYearChangePercent') }}</i></button>
               <span v-else>涨跌幅</span><span>分时</span>
             </div>
-            <article v-for="item in group.bodyRows" :key="item.id" class="quote-row row-grid sortable-row" :class="{ dragging: draggingId === item.id, 'premium-grid': ['美国', '日本'].includes(group.title) }" :data-quote-id="item.id" :data-group="group.title" @pointerdown="startLongPress($event, group.title, item.id)">
+            <article v-for="item in group.bodyRows" :key="item.id" class="quote-row row-grid sortable-row" :class="{ dragging: draggingId === item.id, suspended: item.status === 'suspended', 'premium-grid': ['美国', '日本'].includes(group.title) }" :data-quote-id="item.id" :data-group="group.title" @pointerdown="startLongPress($event, group.title, item.id)">
               <div class="identity">
                 <strong>{{ item.name }}</strong>
-                <span>{{ item.displayCode }}</span>
+                <span>{{ item.displayCode }} <em v-if="item.status === 'suspended'" class="suspended-badge">停牌</em></span>
               </div>
               <div class="price" :class="item.changePercent >= 0 ? 'up' : 'down'">{{ formatPrice(item.price) }}</div>
               <div v-if="['美国', '日本'].includes(group.title)" class="premium" :class="item.premiumRate >= 0 ? 'up' : 'down'" :title="Number.isFinite(item.iopv) ? `参考值 ${formatPrice(item.iopv)}` : ''">{{ formatPercent(item.premiumRate) }}</div>
