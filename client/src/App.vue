@@ -271,10 +271,10 @@ onBeforeUnmount(() => { clearInterval(timer); clearInterval(historyTimer); contr
             <button v-if="['美国', '日本'].includes(group.title)" class="sort-head" type="button" @click="toggleSort(group.title, 'oneYearChangePercent')">近一年 <i>{{ sortMark(group.title, 'oneYearChangePercent') }}</i></button>
             <span v-else>涨跌幅</span><span>分时</span>
           </div>
-          <article v-for="item in group.bodyRows" :key="item.id" class="quote-row row-grid sortable-row" :class="{ dragging: draggingId === item.id, 'premium-grid': ['美国', '日本'].includes(group.title) }" :data-quote-id="item.id" :data-group="group.title" @pointerdown="startLongPress($event, group.title, item.id)">
+          <article v-for="item in group.bodyRows" :key="item.id" class="quote-row row-grid sortable-row" :class="{ dragging: draggingId === item.id, suspended: item.status === 'suspended', 'premium-grid': ['美国', '日本'].includes(group.title) }" :data-quote-id="item.id" :data-group="group.title" @pointerdown="startLongPress($event, group.title, item.id)">
             <div class="identity">
               <strong>{{ item.name }}</strong>
-              <span>{{ item.displayCode }}</span>
+              <span>{{ item.displayCode }} <em v-if="item.status === 'suspended'" class="suspended-badge">停牌</em></span>
               <button v-if="item.custom" class="remove" type="button" aria-label="删除自选" @click="removeStock(item.id.replace('custom-', ''))">×</button>
             </div>
             <div class="price" :class="item.changePercent >= 0 ? 'up' : 'down'">{{ formatPrice(item.price) }}</div>
@@ -318,10 +318,10 @@ onBeforeUnmount(() => { clearInterval(timer); clearInterval(historyTimer); contr
               <button v-if="['美国', '日本'].includes(group.title)" class="sort-head" type="button" @click="toggleSort(group.title, 'oneYearChangePercent')">近一年 <i>{{ sortMark(group.title, 'oneYearChangePercent') }}</i></button>
               <span v-else>涨跌幅</span><span>分时</span>
             </div>
-            <article v-for="item in group.bodyRows" :key="item.id" class="quote-row row-grid sortable-row" :class="{ dragging: draggingId === item.id, 'premium-grid': ['美国', '日本'].includes(group.title) }" :data-quote-id="item.id" :data-group="group.title" @pointerdown="startLongPress($event, group.title, item.id)">
+            <article v-for="item in group.bodyRows" :key="item.id" class="quote-row row-grid sortable-row" :class="{ dragging: draggingId === item.id, suspended: item.status === 'suspended', 'premium-grid': ['美国', '日本'].includes(group.title) }" :data-quote-id="item.id" :data-group="group.title" @pointerdown="startLongPress($event, group.title, item.id)">
               <div class="identity">
                 <strong>{{ item.name }}</strong>
-                <span>{{ item.displayCode }}</span>
+                <span>{{ item.displayCode }} <em v-if="item.status === 'suspended'" class="suspended-badge">停牌</em></span>
               </div>
               <div class="price" :class="item.changePercent >= 0 ? 'up' : 'down'">{{ formatPrice(item.price) }}</div>
               <div v-if="['美国', '日本'].includes(group.title)" class="premium" :class="item.premiumRate >= 0 ? 'up' : 'down'" :title="Number.isFinite(item.iopv) ? `参考值 ${formatPrice(item.iopv)}` : ''">{{ formatPercent(item.premiumRate) }}</div>

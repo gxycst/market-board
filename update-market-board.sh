@@ -14,20 +14,47 @@ sudo -v
 
 echo '[1/3] Pulling code through proxy...'
 if command -v git >/dev/null 2>&1; then
-  git -c "http.proxy=$PROXY" pull --ff-only
+  echo 'Using Git installed on the NAS.'
+  GIT=(git)
 else
-  # Image pulls use the Docker daemon proxy; Git inside the container uses PROXY.
-  sudo docker run --rm \
-    -e HTTP_PROXY="$PROXY" -e HTTPS_PROXY="$PROXY" \
-    -e NO_PROXY=localhost,127.0.0.1,192.168.31.192 \
-    -v "$PROJECT:/repo" -w /repo \
-    alpine/git -c safe.directory=/repo -c "http.proxy=$PROXY" pull --ff-only
+  if ! command -v docker >/dev/null 2>&1; then
+    echo 'Neither Git nor Docker is installed; unable to pull updates.' >&2
+    exit 1
+  fi
+  echo 'Git is not installed; using the alpine/git Docker image instead.'
+  GIT=(sudo docker run --rm -v "$PROJECT:/repo" -w /repo alpine/git -c safe.directory=/repo)
+fi
+BEFORE_COMMIT=$("${GIT[@]}" rev-parse HEAD)
+BRANCH=$("${GIT[@]}" branch --show-current)
+UPSTREAM=$("${GIT[@]}" rev-parse --abbrev-ref '@{upstream}' 2>/dev/null || true)
+if [[ -z "$BRANCH" || -z "$UPSTREAM" ]]; then
+  echo 'The repository must be on a branch with an upstream remote before it can be updated.' >&2
+  echo "Current branch: ${BRANCH:-detached HEAD}; upstream: ${UPSTREAM:-not configured}" >&2
+  exit 1
+fi
+echo "Branch: $BRANCH -> $UPSTREAM"
+echo "Before: $("${GIT[@]}" log -1 --format='%h %s')"
+HTTP_PROXY="$PROXY" HTTPS_PROXY="$PROXY" NO_PROXY=localhost,127.0.0.1,192.168.31.192 \
+  "${GIT[@]}" -c "http.proxy=$PROXY" pull --ff-only
+AFTER_COMMIT=$("${GIT[@]}" rev-parse HEAD)
+if [[ "$BEFORE_COMMIT" == "$AFTER_COMMIT" ]]; then
+  echo 'No new commit was pulled. Confirm that the new code has been pushed to this upstream remote.'
+else
+  echo "Updated: $("${GIT[@]}" log -1 --format='%h %s')"
 fi
 
 echo '[2/3] Building and updating...'
 # Build before replacing the running container so build failures leave it running.
 sudo docker compose build --build-arg HTTP_PROXY="$PROXY" --build-arg HTTPS_PROXY="$PROXY"
-sudo docker compose up -d --no-build
+BUILT_IMAGE=$(sudo docker image inspect local/market-board:latest --format '{{.Id}}')
+sudo docker compose up -d --no-build --force-recreate
+RUNNING_IMAGE=$(sudo docker inspect market-board --format '{{.Image}}')
+if [[ "$RUNNING_IMAGE" != "$BUILT_IMAGE" ]]; then
+  echo "Container image mismatch: built $BUILT_IMAGE but running $RUNNING_IMAGE" >&2
+  exit 1
+fi
+echo "Running commit: $("${GIT[@]}" log -1 --format='%h %s')"
+echo "Running image: ${RUNNING_IMAGE#sha256:}"
 
 echo '[3/3] Checking service...'
 for attempt in {1..20}; do
