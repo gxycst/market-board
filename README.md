@@ -65,6 +65,10 @@ cd /volume2/ssd_docker/market-board
 docker compose up -d --build
 ```
 
+如果项目是通过 Git 克隆的，也可以直接运行 `./update-market-board.sh`。NAS 不需要预先安装 Git：找不到 Git 命令时，脚本会自动使用 `alpine/git` Docker 镜像完成更新（首次运行可能需要下载该镜像）。项目目录仍需包含克隆时生成的 `.git` 目录。
+
+脚本只会拉取当前分支所跟踪的上游仓库；运行前必须先将新提交推送到该远程分支。脚本会打印更新前后的提交，并强制使用新构建的镜像重建容器，便于确认实际运行的版本。
+
 停止或启动：
 
 ```sh
