@@ -83,9 +83,6 @@ body { margin: 0; min-width: 960px; }
 .shell .change, .shell .premium, .shell .ytd, .shell .one-year { font-size: var(--percent-size); }
 .shell .price, .shell .change, .shell .premium, .shell .ytd, .shell .one-year { font-family: "Bahnschrift", "Arial Narrow", Arial, sans-serif; letter-spacing: -.6px; white-space: nowrap; }
 .shell .premium-grid { grid-template-columns: minmax(0, 1.65fr) minmax(0, .7fr) repeat(4, minmax(0, .72fr)) minmax(0, .85fr); column-gap: 3px; }
-.shell .premium-grid .identity strong { font-size: calc(var(--name-size) - 2px); }
-.shell .premium-grid .price { font-size: calc(var(--price-size) - 3px); }
-.shell .premium-grid .change, .shell .premium-grid .premium, .shell .premium-grid .ytd, .shell .premium-grid .one-year { font-size: calc(var(--percent-size) - 3px); }
 .shell .table-head { font-size: 11px; padding-left: 6px; padding-right: 6px; }
 .shell .headline-quote span { font-size: 12px; }
 .shell .headline-quote strong { font-size: var(--price-size); }
